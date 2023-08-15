@@ -1,0 +1,8 @@
+source:
+  URL: "source_url"
+  Type: "source_type"
+  Database: "source_db"
+target:
+  URL: "target_url"
+  Type: "target_type"
+  Database: "target_db"
