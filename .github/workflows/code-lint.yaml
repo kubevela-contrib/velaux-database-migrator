@@ -1,0 +1,94 @@
+name: Go
+
+on:
+  push:
+    branches:
+      - main
+      - release-*
+  pull_request:
+    branches:
+      - main
+      - release-*
+  workflow_dispatch: { }
+permissions:
+  contents: read
+
+env:
+  # Common versions
+  GO_VERSION: '1.20'
+  GOLANGCI_VERSION: 'v1.52.2'
+
+jobs:
+  staticcheck:
+    strategy:
+      matrix:
+        machines: [ "ubuntu-22.04","macos-12" ]
+    runs-on: ${{ matrix.machines }}
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Go Dependencies
+        run: |
+          go mod tidy
+
+      - uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          version: "2023.1.3"
+          install-go: false
+
+  lint:
+    strategy:
+      matrix:
+        machines: [ "ubuntu-22.04","macos-12" ]
+    runs-on: ${{ matrix.machines }}
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      # This action uses its own setup-go, which always seems to use the latest
+      # stable version of Go. We could run 'make lint' to ensure our desired Go
+      # version, but we prefer this action because it leaves 'annotations' (i.e.
+      # it comments on PRs to point out linter violations).
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: ${{ env.GOLANGCI_VERSION }}
+          args: --timeout 20m
+
+  go-check:
+    strategy:
+      matrix:
+        machines: [ "ubuntu-22.04","macos-12" ]
+    runs-on: ${{ matrix.machines }}
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Go Dependencies
+        run: |
+          go mod tidy
+
+      - name: Check Diff
+        run: make check-diff
