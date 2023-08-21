@@ -21,3 +21,6 @@ check-diff: reviewable
 	git --no-pager diff
 	git diff --quiet || (echo please run 'make reviewable' to include all changes && false)
 	echo branch is clean
+
+unit-test:
+	go test -gcflags=all=-l -coverprofile=coverage.txt $(shell go list ./pkg/... ./cmd/...)
