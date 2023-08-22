@@ -32,19 +32,19 @@ target:
   Type: "mongodb"
   Database: "kubevela"
 
-ErrorOnDup: "update"
-tables: 
+actionOnDup: "update" // you can use "skip" also. And if nothing is provided then it will throw an error
+tables: // this is for specifying the table names which are to be migrated. By default it will migrate all the tables
   - "vela_user"
   - "vela_application"
 ```
 
-- In the config file the `ErrorOnDup` tag represents the action that will be taken in case of duplicate entry. By default it will throw error.
+- In the config file the `actionOnDup` tag represents the action that will be taken in case of duplicate entry. By default it will throw error.
 - `tables` represents the database tables that needs to be migrated. If no table is provided then it will migrate the whole database tables.
 
 After setting up the config file just run - 
 
 ``` shell
-velamg migrate ./config.yaml
+velamg migrate -c ./config.yaml
 ```
 
 There you go ! After the migration is successful all the database tables from source database is migrated to the target database according to the given config.

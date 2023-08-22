@@ -1,22 +1,11 @@
 package cmd
 
 import (
-	"fmt"
+	"k8s.io/klog/v2"
 	"vela-migrator/pkg/utils"
 
 	"github.com/spf13/cobra"
 )
-
-// NewMigratorCommand create migrator command
-func NewMigratorCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "velamg",
-		Short: "VelaUX migrator",
-		Long:  "VelaUX migrator",
-	}
-	cmd.AddCommand(NewMigrateCmd())
-	return cmd
-}
 
 // NewMigrateCmd migrate database
 func NewMigrateCmd() *cobra.Command {
@@ -26,21 +15,32 @@ func NewMigrateCmd() *cobra.Command {
 		Long:  "migrate the database",
 	}
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if len(args) > 1 {
-			return fmt.Errorf("too many arguments")
-		}
-		if len(args) == 0 {
-			return fmt.Errorf("provide the path of the config file")
-		}
-		config, err := utils.LoadConfig(args[0])
+		cfgFile, err := cmd.Flags().GetString("config-file")
 		if err != nil {
 			return err
 		}
-		err = migrateCmd(cmd.Context(), config)
+		config, err := utils.LoadConfig(cfgFile)
 		if err != nil {
 			return err
 		}
+		return migrateCmd(cmd.Context(), config)
+	}
+	cmd.Flags().StringP("config-file", "c", "", "specify the path to the config file")
+	err := cmd.MarkFlagRequired("config-file")
+	if err != nil {
+		klog.Info(err)
 		return nil
 	}
+	return cmd
+}
+
+// NewMigratorCommand create migrator command
+func NewMigratorCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "velamg",
+		Short: "VelaUX migrator",
+		Long:  "VelaUX migrator",
+	}
+	cmd.AddCommand(NewMigrateCmd())
 	return cmd
 }

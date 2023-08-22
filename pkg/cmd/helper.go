@@ -94,6 +94,14 @@ func Rollback(ctx context.Context, target datastore.DataStore, tables []datastor
 func Migrate(ctx context.Context, source datastore.DataStore, target datastore.DataStore, actionOnDup string, tables []datastore.Entity) error {
 	deleteTables := make(map[string][]datastore.Entity)
 	restoreTables := make(map[string][]datastore.Entity)
+	var err error
+	rollback := func() error {
+		errOnRollback := Rollback(ctx, target, tables, deleteTables, restoreTables)
+		if errOnRollback != nil {
+			return errOnRollback
+		}
+		return err
+	}
 	for _, table := range tables {
 		skipOnDup := strings.ToLower(actionOnDup) == types.SkipOnDup
 		updateOnDup := strings.ToLower(actionOnDup) == types.UpdateOnDup
@@ -101,11 +109,7 @@ func Migrate(ctx context.Context, source datastore.DataStore, target datastore.D
 		rows, err := source.List(ctx, table, nil)
 		if err != nil {
 			fmt.Printf("Error migrating %s table\n", table.TableName())
-			errOnRollback := Rollback(ctx, target, tables, deleteTables, restoreTables)
-			if errOnRollback != nil {
-				return errOnRollback
-			}
-			return err
+			return rollback()
 		}
 		for _, saveEntity := range rows {
 			tableMigrated = true
@@ -120,28 +124,16 @@ func Migrate(ctx context.Context, source datastore.DataStore, target datastore.D
 					}
 					if updateOnDup {
 						if err = target.Put(ctx, initialEntity); err != nil {
-							err := Rollback(ctx, target, tables, deleteTables, restoreTables)
-							if err != nil {
-								return err
-							}
-							return err
+							return rollback()
 						}
 						restoreTables[saveEntity.TableName()] = append(restoreTables[saveEntity.TableName()], initialEntity)
 						continue
 					}
 					fmt.Printf("Error migrating %s table\n", table.TableName())
-					errOnRollback := Rollback(ctx, target, tables, deleteTables, restoreTables)
-					if errOnRollback != nil {
-						return errOnRollback
-					}
-					return err
+					return rollback()
 				} else {
 					fmt.Printf("Error migrating %s table\n", table.TableName())
-					errOnRollback := Rollback(ctx, target, tables, deleteTables, restoreTables)
-					if errOnRollback != nil {
-						return errOnRollback
-					}
-					return err
+					return rollback()
 				}
 			}
 			deleteTables[saveEntity.TableName()] = append(deleteTables[saveEntity.TableName()], initialEntity)
