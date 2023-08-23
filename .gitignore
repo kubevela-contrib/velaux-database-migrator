@@ -13,6 +13,9 @@ _bin
 *.out
 coverage.txt
 
+#config files
+./config.yaml
+
 # editor and IDE paraphernalia
 .idea
 *.swp
