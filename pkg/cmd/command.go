@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"k8s.io/klog/v2"
 	"vela-migrator/pkg/utils"
+
+	"k8s.io/klog/v2"
 
 	"github.com/spf13/cobra"
 )

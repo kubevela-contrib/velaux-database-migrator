@@ -41,6 +41,7 @@ func InitDataStore(ctx context.Context, config datastore.Config) (datastore.Data
 	}
 }
 
+// FilterTables returns tables with names that match the provided arguments.
 func FilterTables(models map[string]model.Interface, tableNames []string) (tables []datastore.Entity) {
 	if len(tableNames) == 0 {
 		for _, m := range models {
@@ -57,6 +58,7 @@ func FilterTables(models map[string]model.Interface, tableNames []string) (table
 	return tables
 }
 
+// Rollback rolls back the database changes if any error occurs
 func Rollback(ctx context.Context, target datastore.DataStore, tables []datastore.Entity, deleteTables map[string][]datastore.Entity, restoreTables map[string][]datastore.Entity) error {
 	fmt.Println("Initiating rollback...")
 	for _, table := range tables {
@@ -91,11 +93,11 @@ func Rollback(ctx context.Context, target datastore.DataStore, tables []datastor
 	return nil
 }
 
+// Migrate migrates the data from source to target database according to the configs provided
 func Migrate(ctx context.Context, source datastore.DataStore, target datastore.DataStore, actionOnDup string, tables []datastore.Entity) error {
 	deleteTables := make(map[string][]datastore.Entity)
 	restoreTables := make(map[string][]datastore.Entity)
-	var err error
-	rollback := func() error {
+	rollback := func(err error) error {
 		errOnRollback := Rollback(ctx, target, tables, deleteTables, restoreTables)
 		if errOnRollback != nil {
 			return errOnRollback
@@ -103,13 +105,13 @@ func Migrate(ctx context.Context, source datastore.DataStore, target datastore.D
 		return err
 	}
 	for _, table := range tables {
-		skipOnDup := strings.ToLower(actionOnDup) == types.SkipOnDup
-		updateOnDup := strings.ToLower(actionOnDup) == types.UpdateOnDup
+		skipOnDup := strings.EqualFold(actionOnDup, types.SkipOnDup)
+		updateOnDup := strings.EqualFold(actionOnDup, types.UpdateOnDup)
 		var tableMigrated = false
 		rows, err := source.List(ctx, table, nil)
 		if err != nil {
 			fmt.Printf("Error migrating %s table\n", table.TableName())
-			return rollback()
+			return rollback(err)
 		}
 		for _, saveEntity := range rows {
 			tableMigrated = true
@@ -124,17 +126,16 @@ func Migrate(ctx context.Context, source datastore.DataStore, target datastore.D
 					}
 					if updateOnDup {
 						if err = target.Put(ctx, initialEntity); err != nil {
-							return rollback()
+							return rollback(err)
 						}
 						restoreTables[saveEntity.TableName()] = append(restoreTables[saveEntity.TableName()], initialEntity)
 						continue
 					}
-					fmt.Printf("Error migrating %s table\n", table.TableName())
-					return rollback()
-				} else {
-					fmt.Printf("Error migrating %s table\n", table.TableName())
-					return rollback()
+					fmt.Printf("Error migrating %s table: Duplicate entry found\n", table.TableName())
+					return rollback(err)
 				}
+				fmt.Printf("Error migrating %s table\n", table.TableName())
+				return rollback(err)
 			}
 			deleteTables[saveEntity.TableName()] = append(deleteTables[saveEntity.TableName()], initialEntity)
 		}
