@@ -52,7 +52,7 @@ func initMysqlTestDs() (datastore.DataStore, error) {
 		return nil, err
 	}
 	for _, v := range model.GetRegisterModels() {
-		err := db.Migrator().DropTable(&v)
+		err := db.Migrator().DropTable(v)
 		if err != nil {
 			return nil, err
 		}
