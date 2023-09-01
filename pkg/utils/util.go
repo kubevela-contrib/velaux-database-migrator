@@ -10,6 +10,7 @@ import (
 	"github.com/kubevela/velaux/pkg/server/infrastructure/datastore"
 )
 
+// LoadConfig loads the data from the provided config file and returns the MigratorConfig struct
 func LoadConfig(path string) (config types.MigratorConfig, err error) {
 	viper.SetConfigFile(path)
 	err = viper.ReadInConfig()
@@ -20,6 +21,7 @@ func LoadConfig(path string) (config types.MigratorConfig, err error) {
 	return
 }
 
+// CloneEntity copied the datastore.Entity into a new entity
 func CloneEntity(input datastore.Entity) (datastore.Entity, error) {
 	temp := reflect.New(reflect.ValueOf(input).Elem().Type()).Interface().(datastore.Entity)
 	err := copier.CopyWithOption(temp, input, copier.Option{})

@@ -17,7 +17,6 @@ import (
 	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/klog"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -97,7 +96,7 @@ func initKubeapiTestDs() (datastore.DataStore, error) {
 }
 
 func initMongodbTestDs() (datastore.DataStore, error) {
-	clientOpts := options.Client().ApplyURI("mongodb://localhost:27017")
+	clientOpts := options.Client().ApplyURI("mongodb+srv://ngdev21:21102002n@clusterdev.eodjv7o.mongodb.net/?retryWrites=true&w=majority")
 	mongoClient, err := mongo.Connect(context.TODO(), clientOpts)
 	if err != nil {
 		return nil, err
@@ -107,7 +106,7 @@ func initMongodbTestDs() (datastore.DataStore, error) {
 		return nil, err
 	}
 	mongodbDriver, err := mongodb.New(context.TODO(), datastore.Config{
-		URL:      "mongodb://localhost:27017",
+		URL:      "mongodb+srv://ngdev21:21102002n@clusterdev.eodjv7o.mongodb.net/?retryWrites=true&w=majority",
 		Database: "kubevela",
 	})
 	if err != nil {
@@ -145,12 +144,14 @@ func checkEqualDataSlice(output []datastore.Entity, expected []datastore.Entity)
 			return false
 		}
 		cloneExpected, err := utils.CloneEntity(expected[i])
+		if err != nil {
+			return false
+		}
 		cloneOutput.SetUpdateTime(time.Time{})
 		cloneOutput.SetCreateTime(time.Time{})
 		cloneExpected.SetUpdateTime(time.Time{})
 		cloneExpected.SetCreateTime(time.Time{})
-		if reflect.DeepEqual(cloneExpected, cloneOutput) == false {
-			klog.Info(cloneOutput, cloneExpected)
+		if !reflect.DeepEqual(cloneExpected, cloneOutput) {
 			return false
 		}
 	}
