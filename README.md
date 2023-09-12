@@ -15,7 +15,10 @@ It's an easy, fast and reliable way of database migration for velaux.
 ## Quickstart
 
 ### Installation
-
+- **Linux/macOS**
+```shell
+curl -fsSl https://raw.githubusercontent.com/kubevela-contrib/velaux-database-migrator/main/install-velamg.sh | bash
+```
 ### Setup
 
 For migrating the database you need a config file for the configuration of source and targte databases and other options.
