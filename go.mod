@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/jinzhu/copier v0.3.5
-	github.com/kubevela/velaux v1.9.3
+	github.com/kubevela/velaux v1.9.4-0.20230915055826-4579408f62fd
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8
 	github.com/spf13/cobra v1.7.0
