@@ -161,8 +161,8 @@ func checkEqualDataSlice(output []datastore.Entity, expected []datastore.Entity)
 var _ = Describe("Test helper functions", func() {
 	It("Test FilterTable functions", func() {
 		models := model.GetRegisterModels()
-		tableNames := []string{"vela_application", "vela_user"}
-		outTables := []datastore.Entity{models["vela_application"].(datastore.Entity), models["vela_user"].(datastore.Entity)}
+		tableNames := []string{"vela_application", "vela_project"}
+		outTables := []datastore.Entity{models["vela_application"].(datastore.Entity), models["vela_project"].(datastore.Entity)}
 		tables := FilterTables(models, tableNames)
 		Expect(len(tables)).Should(Equal(len(outTables)))
 		tables = FilterTables(models, []string{})
@@ -171,7 +171,7 @@ var _ = Describe("Test helper functions", func() {
 		Expect(len(tables)).Should(Equal(0))
 	})
 	It("Test migrate Function", func() {
-		dbTypes := []string{"kubeapi", "mongodb"}
+		dbTypes := []string{"kubeapi", "mongodb", "mysql"}
 
 		updTestData := migrationTestData{
 			SourceData: []datastore.Entity{
@@ -179,9 +179,9 @@ var _ = Describe("Test helper functions", func() {
 					Name:        "app1",
 					Description: "newApp",
 				},
-				&model.User{
-					Name:  "user1",
-					Alias: "newUser",
+				&model.Project{
+					Name:  "project1",
+					Alias: "newProject",
 				},
 			},
 			TargetData: []datastore.Entity{
@@ -189,9 +189,9 @@ var _ = Describe("Test helper functions", func() {
 					Name:        "app1",
 					Description: "oldApp",
 				},
-				&model.User{
-					Name:  "user2",
-					Alias: "oldUser",
+				&model.Project{
+					Name:  "project2",
+					Alias: "oldProject",
 				},
 			},
 			ExpectedData: []datastore.Entity{
@@ -199,13 +199,13 @@ var _ = Describe("Test helper functions", func() {
 					Name:        "app1",
 					Description: "newApp",
 				},
-				&model.User{
-					Name:  "user1",
-					Alias: "newUser",
+				&model.Project{
+					Name:  "project1",
+					Alias: "newProject",
 				},
-				&model.User{
-					Name:  "user2",
-					Alias: "oldUser",
+				&model.Project{
+					Name:  "project2",
+					Alias: "oldProject",
 				},
 			},
 			ActionOnDup: "update",
@@ -217,9 +217,9 @@ var _ = Describe("Test helper functions", func() {
 					Name:        "app1",
 					Description: "newApp",
 				},
-				&model.User{
-					Name:  "user1",
-					Alias: "newUser",
+				&model.Project{
+					Name:  "project1",
+					Alias: "newProject",
 				},
 			},
 			TargetData: []datastore.Entity{
@@ -227,9 +227,9 @@ var _ = Describe("Test helper functions", func() {
 					Name:        "app1",
 					Description: "oldApp",
 				},
-				&model.User{
-					Name:  "user2",
-					Alias: "oldUser",
+				&model.Project{
+					Name:  "project2",
+					Alias: "oldProject",
 				},
 			},
 			ExpectedData: []datastore.Entity{
@@ -237,13 +237,13 @@ var _ = Describe("Test helper functions", func() {
 					Name:        "app1",
 					Description: "oldApp",
 				},
-				&model.User{
-					Name:  "user1",
-					Alias: "newUser",
+				&model.Project{
+					Name:  "project1",
+					Alias: "newProject",
 				},
-				&model.User{
-					Name:  "user2",
-					Alias: "oldUser",
+				&model.Project{
+					Name:  "project2",
+					Alias: "oldProject",
 				},
 			},
 			ActionOnDup: "skip",
@@ -251,9 +251,9 @@ var _ = Describe("Test helper functions", func() {
 
 		errTestData := migrationTestData{
 			SourceData: []datastore.Entity{
-				&model.User{
-					Name:  "user1",
-					Alias: "newUser",
+				&model.Project{
+					Name:  "project1",
+					Alias: "newProject",
 				},
 				&model.Application{
 					Name:        "app1",
@@ -261,9 +261,9 @@ var _ = Describe("Test helper functions", func() {
 				},
 			},
 			TargetData: []datastore.Entity{
-				&model.User{
-					Name:  "user2",
-					Alias: "oldUser",
+				&model.Project{
+					Name:  "project2",
+					Alias: "oldProject",
 				},
 				&model.Application{
 					Name:        "app1",
@@ -271,9 +271,9 @@ var _ = Describe("Test helper functions", func() {
 				},
 			},
 			ExpectedData: []datastore.Entity{
-				&model.User{
-					Name:  "user2",
-					Alias: "oldUser",
+				&model.Project{
+					Name:  "project2",
+					Alias: "oldProject",
 				},
 				&model.Application{
 					Name:        "app1",
@@ -288,11 +288,11 @@ var _ = Describe("Test helper functions", func() {
 					continue
 				}
 				By("Test migrator function with update on duplicate")
-				testMigrate(dbTypes[i], dbTypes[j], updTestData.ActionOnDup, []string{"vela_user", "vela_application"}, updTestData.SourceData, updTestData.TargetData, updTestData.ExpectedData, false)
+				testMigrate(dbTypes[i], dbTypes[j], updTestData.ActionOnDup, []string{"vela_project", "vela_application"}, updTestData.SourceData, updTestData.TargetData, updTestData.ExpectedData, false)
 				By("Test migrator function with skip on duplicate")
-				testMigrate(dbTypes[i], dbTypes[j], skipTestData.ActionOnDup, []string{"vela_user", "vela_application"}, skipTestData.SourceData, skipTestData.TargetData, skipTestData.ExpectedData, false)
+				testMigrate(dbTypes[i], dbTypes[j], skipTestData.ActionOnDup, []string{"vela_project", "vela_application"}, skipTestData.SourceData, skipTestData.TargetData, skipTestData.ExpectedData, false)
 				By("Test migrator function with err on duplicate")
-				testMigrate(dbTypes[i], dbTypes[j], errTestData.ActionOnDup, []string{"vela_user", "vela_application"}, errTestData.SourceData, errTestData.TargetData, errTestData.ExpectedData, true)
+				testMigrate(dbTypes[i], dbTypes[j], errTestData.ActionOnDup, []string{"vela_project", "vela_application"}, errTestData.SourceData, errTestData.TargetData, errTestData.ExpectedData, true)
 			}
 		}
 	})
